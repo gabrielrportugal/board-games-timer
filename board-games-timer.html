@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⏱️ Timer de Jogos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .emoji {
+            font-size: 3em;
+            margin-bottom: 20px;
+            display: block;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Timer display */
+        .timer-display {
+            font-size: 8em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 30px 0;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            line-height: 1;
+        }
+
+        .timer-display.warning {
+            color: #ff6b6b;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Input de configuração */
+        .config-section {
+            margin-bottom: 30px;
+        }
+
+        .config-section label {
+            display: block;
+            font-size: 1.2em;
+            color: #555;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .config-section input {
+            width: 150px;
+            padding: 15px;
+            font-size: 1.5em;
+            border: 3px solid #667eea;
+            border-radius: 15px;
+            text-align: center;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .config-section input:focus {
+            outline: none;
+            border-color: #764ba2;
+            box-shadow: 0 0 15px rgba(102, 126, 234, 0.5);
+        }
+
+        /* Botões */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 20px 40px;
+            font-size: 1.5em;
+            font-weight: bold;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            font-family: inherit;
+            min-width: 140px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+            color: white;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Mensagem de fim */
+        .end-message {
+            font-size: 2em;
+            color: #ff6b6b;
+            font-weight: bold;
+            margin-top: 20px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            animation: shake 0.5s infinite;
+        }
+
+        .end-message.show {
+            opacity: 1;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-5deg); }
+            75% { transform: rotate(5deg); }
+        }
+
+        /* Responsividade */
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .timer-display {
+                font-size: 5em;
+            }
+
+            .config-section input {
+                width: 120px;
+                font-size: 1.3em;
+            }
+
+            button {
+                padding: 18px 30px;
+                font-size: 1.3em;
+                min-width: 120px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .timer-display {
+                font-size: 4em;
+            }
+
+            .button-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <span class="emoji">🎲</span>
+        <h1>Timer de Jogos</h1>
+
+        <!-- Configuração do tempo -->
+        <div class="config-section">
+            <label for="timeInput">Tempo (segundos):</label>
+            <input 
+                type="number" 
+                id="timeInput" 
+                min="1" 
+                max="999" 
+                value="60"
+                placeholder="60"
+            >
+        </div>
+
+        <!-- Display do timer -->
+        <div class="timer-display" id="timerDisplay">60</div>
+
+        <!-- Botões de controle -->
+        <div class="button-group">
+            <button class="btn-play" id="playBtn">▶️ Play</button>
+            <button class="btn-reset" id="resetBtn">🔄 Reset</button>
+        </div>
+
+        <!-- Mensagem de fim -->
+        <div class="end-message" id="endMessage">⏰ TEMPO ESGOTADO! ⏰</div>
+    </div>
+
+    <script>
+        // Elementos do DOM
+        const timerDisplay = document.getElementById('timerDisplay');
+        const timeInput = document.getElementById('timeInput');
+        const playBtn = document.getElementById('playBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const endMessage = document.getElementById('endMessage');
+
+        // Variáveis de controle
+        let totalSeconds = 60;
+        let remainingSeconds = 60;
+        let timerInterval = null;
+        let isRunning = false;
+
+        // Criar áudio do alarme usando Web Audio API para garantir compatibilidade
+        let audioContext;
+        let alarmSound;
+
+        // Inicializar áudio após primeira interação do usuário
+        function initAudio() {
+            if (!audioContext) {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                createAlarmSound();
+            }
+        }
+
+        // Criar som de alarme usando Web Audio API
+        function createAlarmSound() {
+            // Criar um buffer com o som do alarme
+            const duration = 1;
+            const sampleRate = audioContext.sampleRate;
+            const buffer = audioContext.createBuffer(1, duration * sampleRate, sampleRate);
+            const data = buffer.getChannelData(0);
+
+            // Gerar uma onda com frequências alternadas (som de alarme)
+            for (let i = 0; i < buffer.length; i++) {
+                const t = i / sampleRate;
+                const freq = (Math.floor(t * 4) % 2 === 0) ? 800 : 600;
+                data[i] = Math.sin(2 * Math.PI * freq * t) * 0.3;
+            }
+
+            alarmSound = buffer;
+        }
+
+        // Tocar o som do alarme
+        function playAlarm() {
+            if (!audioContext) return;
+
+            // Tocar 3 vezes
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const source = audioContext.createBufferSource();
+                    source.buffer = alarmSound;
+                    source.connect(audioContext.destination);
+                    source.start(0);
+                }, i * 1200);
+            }
+        }
+
+        // Atualizar o display do timer
+        function updateDisplay() {
+            timerDisplay.textContent = remainingSeconds;
+            
+            // Adicionar classe de warning nos últimos 10 segundos
+            if (remainingSeconds <= 10 && remainingSeconds > 0) {
+                timerDisplay.classList.add('warning');
+            } else {
+                timerDisplay.classList.remove('warning');
+            }
+        }
+
+        // Função principal do timer
+        function tick() {
+            remainingSeconds--;
+            updateDisplay();
+
+            if (remainingSeconds <= 0) {
+                endTimer();
+            }
+        }
+
+        // Iniciar o timer
+        function startTimer() {
+            // Inicializar áudio na primeira interação
+            initAudio();
+
+            if (isRunning) {
+                // Se já está rodando, pausar
+                pauseTimer();
+                return;
+            }
+
+            // Atualizar o tempo total se o timer está no início
+            if (remainingSeconds === totalSeconds) {
+                const inputValue = parseInt(timeInput.value);
+                if (inputValue > 0) {
+                    totalSeconds = inputValue;
+                    remainingSeconds = inputValue;
+                    updateDisplay();
+                }
+            }
+
+            isRunning = true;
+            timerInterval = setInterval(tick, 1000);
+            
+            // Atualizar UI dos botões
+            playBtn.textContent = '⏸️ Pausar';
+            playBtn.classList.remove('btn-play');
+            playBtn.classList.add('btn-pause');
+            timeInput.disabled = true;
+            endMessage.classList.remove('show');
+        }
+
+        // Pausar o timer
+        function pauseTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            
+            // Atualizar UI dos botões
+            playBtn.textContent = '▶️ Play';
+            playBtn.classList.remove('btn-pause');
+            playBtn.classList.add('btn-play');
+        }
+
+        // Resetar o timer
+        function resetTimer() {
+            pauseTimer();
+            
+            const inputValue = parseInt(timeInput.value);
+            if (inputValue > 0) {
+                totalSeconds = inputValue;
+                remainingSeconds = inputValue;
+            } else {
+                remainingSeconds = totalSeconds;
+            }
+            
+            updateDisplay();
+            timeInput.disabled = false;
+            endMessage.classList.remove('show');
+        }
+
+        // Finalizar o timer
+        function endTimer() {
+            pauseTimer();
+            remainingSeconds = 0;
+            updateDisplay();
+            
+            // Mostrar mensagem
+            endMessage.classList.add('show');
+            
+            // Tocar alarme
+            playAlarm();
+            
+            // Habilitar input novamente
+            timeInput.disabled = false;
+            
+            // Resetar automaticamente após 3 segundos
+            setTimeout(() => {
+                if (remainingSeconds === 0) {
+                    resetTimer();
+                }
+            }, 3000);
+        }
+
+        // Event listeners
+        playBtn.addEventListener('click', startTimer);
+        resetBtn.addEventListener('click', resetTimer);
+
+        // Atualizar display quando o input mudar (somente se não estiver rodando)
+        timeInput.addEventListener('input', () => {
+            if (!isRunning) {
+                const inputValue = parseInt(timeInput.value);
+                if (inputValue > 0) {
+                    totalSeconds = inputValue;
+                    remainingSeconds = inputValue;
+                    updateDisplay();
+                }
+            }
+        });
+
+        // Permitir Enter para iniciar
+        timeInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !isRunning) {
+                startTimer();
+            }
+        });
+
+        // Prevenir valores negativos no input
+        timeInput.addEventListener('blur', () => {
+            const inputValue = parseInt(timeInput.value);
+            if (!inputValue || inputValue < 1) {
+                timeInput.value = totalSeconds;
+            }
+        });
+
+        // Inicialização
+        updateDisplay();
+    </script>
+</body>
+</html>
